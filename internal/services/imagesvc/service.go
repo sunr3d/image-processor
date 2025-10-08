@@ -1,0 +1,114 @@
+package imagesvc
+
+import (
+	"context"
+	"fmt"
+	"mime/multipart"
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/wb-go/wbf/zlog"
+	
+	"github.com/sunr3d/image-processor/internal/interfaces/infra"
+	"github.com/sunr3d/image-processor/internal/interfaces/services"
+	"github.com/sunr3d/image-processor/models"
+)
+
+var _ services.ImageService = (*imageService)(nil)
+
+type imageService struct {
+	imgStorage  infra.ImageStorage
+	metaStorage infra.MetadataStorage
+	broker      infra.Broker
+}
+
+// New - конструктор imageService.
+func New(imgStorage infra.ImageStorage, metaStorage infra.MetadataStorage, broker infra.Broker) *imageService {
+	return &imageService{
+		imgStorage:  imgStorage,
+		metaStorage: metaStorage,
+		broker:      broker,
+	}
+}
+
+// UploadImage - загружает оригинальное изображение, сохраняет метаданные и передает задачу на обработку в брокер.
+func (is *imageService) UploadImage(ctx context.Context, file multipart.File, filename string) (string, error) {
+	id := uuid.New().String()
+
+	zlog.Logger.Info().Msgf("Начало загрузки изображения: %s (ID: %s)", filename, id)
+
+	path, err := is.imgStorage.SaveOriginal(ctx, id, file, filename)
+	if err != nil {
+		return "", fmt.Errorf("imgStorage.SaveOriginal: %w", err)
+	}
+
+	meta := &models.ImageMetadata{
+		ID:           id,
+		OriginalName: filename,
+		OriginalPath: path,
+		Status:       models.StatusPending,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+
+	if err := is.metaStorage.Save(ctx, meta); err != nil {
+		return "", fmt.Errorf("metaStorage.Save: %w", err)
+	}
+
+	task := &models.ProcessingTask{
+		ImageID:      id,
+		OriginalPath: path,
+	}
+
+	if err := is.broker.Publish(ctx, task); err != nil {
+		return "", fmt.Errorf("broker.Publish: %w", err)
+	}
+
+	zlog.Logger.Info().Msgf("Изображение %s успешно загружено и передано на обработку", id)
+
+	return id, nil
+}
+
+// GetImage - получает путь к изображению по его ID и типу.
+func (is *imageService) GetImage(ctx context.Context, id, imageType string) (string, error) {
+	if _, err := is.metaStorage.Get(ctx, id); err != nil {
+		return "", fmt.Errorf("metaStorage.Get: %w", err)
+	}
+
+	path, err := is.imgStorage.GetPath(id, imageType)
+	if err != nil {
+		return "", fmt.Errorf("imgStorage.GetPath: %w", err)
+	}
+
+	return path, nil
+}
+
+// DeleteImage - удаляет изображение по его ID.
+func (is *imageService) DeleteImage(ctx context.Context, id string) error {
+	if _, err := is.metaStorage.Get(ctx, id); err != nil {
+		return fmt.Errorf("metaStorage.Get: %w", err)
+	}
+
+	if err := is.imgStorage.DeleteImage(ctx, id); err != nil {
+		return fmt.Errorf("imgStorage.DeleteImage: %w", err)
+	}
+
+	if err := is.metaStorage.Delete(ctx, id); err != nil {
+		return fmt.Errorf("metaStorage.Delete: %w", err)
+	}
+
+	zlog.Logger.Info().Msgf("Изображение %s успешно удалено", id)
+
+	return nil
+}
+
+// GetImageMeta - получает метаданные изображения по его ID.
+func (is *imageService) GetImageMeta(ctx context.Context, id string) (*models.ImageMetadata, error) {
+	meta, err := is.metaStorage.Get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("metaStorage.Get: %w", err)
+	}
+
+	return meta, nil
+}
