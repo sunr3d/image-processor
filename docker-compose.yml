@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      HTTP_PORT: "8080"
+      LOG_LEVEL: "info"
+    ports:
+      - "8080:8080"
+
+      
