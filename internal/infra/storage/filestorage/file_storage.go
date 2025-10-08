@@ -1,4 +1,4 @@
-package inmem
+package filestorage
 
 import (
 	"context"
@@ -13,21 +13,21 @@ import (
 	"github.com/sunr3d/image-processor/internal/interfaces/infra"
 )
 
-var _ infra.ImageStorage = (*FileStorage)(nil)
+var _ infra.ImageStorage = (*fileStorage)(nil)
 
-type FileStorage struct {
+type fileStorage struct {
 	basePath string
 }
 
 // NewFileStorage - конструктор FileStorage.
-func NewFileStorage(basePath string) *FileStorage {
-	return &FileStorage{
+func NewFileStorage(basePath string) *fileStorage {
+	return &fileStorage{
 		basePath: basePath,
 	}
 }
 
 // SaveOriginal - сохраняет оригинал изображения и возвращает путь к нему.
-func (fs *FileStorage) SaveOriginal(ctx context.Context, id string, file multipart.File, filename string) (string, error) {
+func (fs *fileStorage) SaveOriginal(ctx context.Context, id string, file multipart.File, filename string) (string, error) {
 	dir := filepath.Join(fs.basePath, "original", id)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", fmt.Errorf("os.MkdirAll: %w", err)
@@ -50,12 +50,12 @@ func (fs *FileStorage) SaveOriginal(ctx context.Context, id string, file multipa
 }
 
 // SaveProcessed - сохраняет обработанное изображение с указанием типа и возвращает путь к нему.
-func (fs *FileStorage) SaveProcessed(ctx context.Context, id, imageType string, data []byte) (string, error) {
+func (fs *fileStorage) SaveProcessed(ctx context.Context, id, imageType string, data []byte) (string, error) {
 	dir := filepath.Join(fs.basePath, "processed", id)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", fmt.Errorf("os.MkdirAll: %w", err)
 	}
-	
+
 	filename := fmt.Sprintf("%s.jpg", imageType)
 	path := filepath.Join(dir, filename)
 
@@ -69,7 +69,7 @@ func (fs *FileStorage) SaveProcessed(ctx context.Context, id, imageType string, 
 }
 
 // GetPath - находит путь к изображению по его ID и типу.
-func (fs *FileStorage) GetPath(id, imageType string) (string, error) {
+func (fs *fileStorage) GetPath(id, imageType string) (string, error) {
 	path := ""
 
 	switch imageType {
@@ -86,7 +86,7 @@ func (fs *FileStorage) GetPath(id, imageType string) (string, error) {
 }
 
 // DeleteImage - удаляет изображение (оригинал и обработанные версии) по его ID.
-func (fs *FileStorage) DeleteImage(ctx context.Context, id string) error {
+func (fs *fileStorage) DeleteImage(ctx context.Context, id string) error {
 	originalPath := filepath.Join(fs.basePath, "original", id)
 	processedPath := filepath.Join(fs.basePath, "processed", id)
 

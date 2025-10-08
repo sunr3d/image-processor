@@ -24,7 +24,8 @@ type ImageMetadata struct {
 	UpdatedAt       time.Time
 }
 
-type ProcessingTask struct {
-	ImageID      string
-	OriginalPath string
+type ProcessedImages struct {
+	Resized     []byte
+	Thumbnail   []byte
+	Watermarked []byte
 }

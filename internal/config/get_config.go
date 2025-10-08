@@ -19,6 +19,7 @@ func GetConfig(path string) (*Config, error) {
 	cfg.SetDefault("KAFKA_TOPIC", "image-processing")
 	cfg.SetDefault("KAFKA_GROUP", "image-processor-group")
 	cfg.SetDefault("STORAGE_PATH", "./storage")
+	cfg.SetDefault("METADATA_PATH", "./metadata")
 	cfg.SetDefault("THUMBNAIL_SIZE", 200)
 	cfg.SetDefault("RESIZE_WIDTH", 800)
 	cfg.SetDefault("WATERMARK_TEXT", "© Sunr3d's Image Processor")

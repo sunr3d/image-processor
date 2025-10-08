@@ -1,27 +1,30 @@
 package processor
 
 import (
+	"bytes"
 	"fmt"
+	"image"
+	"image/color"
+	"image/jpeg"
 
 	"github.com/disintegration/imaging"
 	"github.com/wb-go/wbf/zlog"
+
+	"github.com/sunr3d/image-processor/internal/interfaces/services"
+	"github.com/sunr3d/image-processor/models"
 )
 
-type ImageProcessor struct {
+var _ services.ImageProcessor = (*imageProcessor)(nil)
+
+type imageProcessor struct {
 	thumbnailSize int
 	resizeWidth   int
 	watermarkText string
 }
 
-type ProcessedImages struct {
-	Resized     []byte
-	Thumbnail   []byte
-	Watermarked []byte
-}
-
 // New - конструктор для ImageProcessor
-func New(thumbSize, resizeW int, watermark string) *ImageProcessor {
-	return &ImageProcessor{
+func New(thumbSize, resizeW int, watermark string) *imageProcessor {
+	return &imageProcessor{
 		thumbnailSize: thumbSize,
 		resizeWidth:   resizeW,
 		watermarkText: watermark,
@@ -29,7 +32,7 @@ func New(thumbSize, resizeW int, watermark string) *ImageProcessor {
 }
 
 // Process - обрабатывает изображение в трех вариантах: resized, thumbnail, watermarked.
-func (p *ImageProcessor) Process(imagePath string) (*ProcessedImages, error) {
+func (p *imageProcessor) Process(imagePath string) (*models.ProcessedImages, error) {
 	img, err := imaging.Open(imagePath)
 	if err != nil {
 		return nil, fmt.Errorf("imaging.Open: %w", err)
@@ -60,9 +63,35 @@ func (p *ImageProcessor) Process(imagePath string) (*ProcessedImages, error) {
 
 	zlog.Logger.Info().Msgf("Обработка изображения %s завершена", imagePath)
 
-	return &ProcessedImages{
-		Resized: resizedBytes,
-		Thumbnail: thumbnailBytes,
+	return &models.ProcessedImages{
+		Resized:     resizedBytes,
+		Thumbnail:   thumbnailBytes,
 		Watermarked: watermarkedBytes,
 	}, nil
+}
+
+// Helpers
+func encodeToJPEG(img image.Image) ([]byte, error) {
+	var buf bytes.Buffer
+	opts := &jpeg.Options{Quality: 90}
+
+	if err := jpeg.Encode(&buf, img, opts); err != nil {
+		return nil, fmt.Errorf("jpeg.Encode: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+func (p *imageProcessor) addWatermark(img image.Image) image.Image {
+	overlay := image.NewRGBA(img.Bounds())
+
+	for y := 0; y < img.Bounds().Dy(); y++ {
+		for x := 0; x < img.Bounds().Dx(); x++ {
+			if (x+y)%100 < 20 {
+				overlay.Set(x, y, color.RGBA{255, 255, 255, 50})
+			}
+		}
+	}
+
+	return imaging.Overlay(img, overlay, image.Pt(0, 0), 0.3)
 }

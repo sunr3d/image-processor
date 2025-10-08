@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/wb-go/wbf/zlog"
-	
+
 	"github.com/sunr3d/image-processor/internal/interfaces/infra"
 	"github.com/sunr3d/image-processor/internal/interfaces/services"
 	"github.com/sunr3d/image-processor/models"
@@ -20,15 +20,15 @@ var _ services.ImageService = (*imageService)(nil)
 type imageService struct {
 	imgStorage  infra.ImageStorage
 	metaStorage infra.MetadataStorage
-	broker      infra.Broker
+	publisher   infra.Publisher
 }
 
 // New - конструктор imageService.
-func New(imgStorage infra.ImageStorage, metaStorage infra.MetadataStorage, broker infra.Broker) *imageService {
+func New(imgStorage infra.ImageStorage, metaStorage infra.MetadataStorage, publisher infra.Publisher) *imageService {
 	return &imageService{
 		imgStorage:  imgStorage,
 		metaStorage: metaStorage,
-		broker:      broker,
+		publisher:   publisher,
 	}
 }
 
@@ -61,7 +61,7 @@ func (is *imageService) UploadImage(ctx context.Context, file multipart.File, fi
 		OriginalPath: path,
 	}
 
-	if err := is.broker.Publish(ctx, task); err != nil {
+	if err := is.publisher.Publish(ctx, task); err != nil {
 		return "", fmt.Errorf("broker.Publish: %w", err)
 	}
 

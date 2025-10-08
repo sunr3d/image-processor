@@ -3,11 +3,9 @@ package kafka
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/segmentio/kafka-go"
-
 	wbkafka "github.com/wb-go/wbf/kafka"
 	"github.com/wb-go/wbf/retry"
 	"github.com/wb-go/wbf/zlog"
@@ -16,32 +14,26 @@ import (
 	"github.com/sunr3d/image-processor/models"
 )
 
-var _ infra.Broker = (*KafkaBroker)(nil)
+var _ infra.Subscriber = (*subscriber)(nil)
 
-type KafkaBroker struct {
-	producer *wbkafka.Producer
+type subscriber struct {
 	consumer *wbkafka.Consumer
 	topic    string
 }
 
-// New - конструктор-обертка для Kafka.
-func New(brokers []string, topic, groupID string) *KafkaBroker {
-	producer := wbkafka.NewProducer(brokers, topic)
+// NewSubscriber - конструктор subscriber.
+func NewSubscriber(brokers []string, topic, groupID string) *subscriber {
 	consumer := wbkafka.NewConsumer(brokers, topic, groupID)
 
-	return &KafkaBroker{
-		producer: producer,
+	return &subscriber{
 		consumer: consumer,
 		topic:    topic,
 	}
 }
 
-// Publish - отправляет задачу обработки изображения в очередь Kafka.
-func (kb *KafkaBroker) Publish(ctx context.Context, task *models.ProcessingTask) error {
-	data, err := json.Marshal(task)
-	if err != nil {
-		return fmt.Errorf("json.Marshal: %w", err)
-	}
+// Subscribe - подписывается на очередь Kafka и выполняет обработку задач handler.
+func (s *subscriber) Subscribe(ctx context.Context, handler func(ctx context.Context, task *models.ProcessingTask) error) error {
+	msgChan := make(chan kafka.Message)
 
 	strategy := retry.Strategy{
 		Attempts: 3,
@@ -49,25 +41,7 @@ func (kb *KafkaBroker) Publish(ctx context.Context, task *models.ProcessingTask)
 		Backoff:  2,
 	}
 
-	if err := kb.producer.SendWithRetry(ctx, strategy, []byte(task.ImageID), data); err != nil {
-		return fmt.Errorf("producer.SendWithRetry: %w", err)
-	}
-	zlog.Logger.Info().Msgf("Задача обработки изображения отправлена в Kafka: %s", task.ImageID)
-
-	return nil
-}
-
-// Subscribe - подписывается на очередь Kafka и выполняет обработку задач handler.
-func (kb *KafkaBroker) Subscribe(ctx context.Context, handler func(ctx context.Context, task *models.ProcessingTask) error) error {
-	msgChan := make(chan kafka.Message)
-
-	strategy := retry.Strategy{
-		Attempts: 3,
-		Delay: time.Second,
-		Backoff: 2,
-	}
-
-	kb.consumer.StartConsuming(ctx, msgChan, strategy)
+	s.consumer.StartConsuming(ctx, msgChan, strategy)
 
 	for {
 		select {
@@ -88,4 +62,13 @@ func (kb *KafkaBroker) Subscribe(ctx context.Context, handler func(ctx context.C
 			}
 		}
 	}
+}
+
+func (s *subscriber) Close() error {
+	if err := s.consumer.Close(); err != nil {
+		zlog.Logger.Warn().Err(err).Msg("consumer.Close")
+		return err
+	}
+
+	return nil
 }

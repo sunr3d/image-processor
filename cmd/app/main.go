@@ -1,6 +1,11 @@
 package main
 
 import (
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/wb-go/wbf/zlog"
 
 	"github.com/sunr3d/image-processor/internal/config"
@@ -18,7 +23,10 @@ func main() {
 	}
 	zlog.Logger.Info().Msg("конфиг успешно загружен...")
 
-	if err := entrypoint.Run(cfg); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	if err := entrypoint.RunApp(ctx, cfg); err != nil {
 		zlog.Logger.Fatal().Err(err).Msg("entrypoint.Run")
 	}
 }
