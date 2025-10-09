@@ -6,9 +6,6 @@ type uploadResp struct {
 	Message string `json:"message"`
 }
 
-type getResp struct {
-}
-
 type deleteResp struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
