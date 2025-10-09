@@ -64,6 +64,7 @@ func (h *Handler) getImage(c *ginext.Context) {
 	path, err := h.svc.GetImage(c.Request.Context(), id, imageType)
 	if err != nil {
 		zlog.Logger.Error().Err(err).Msgf("Ошибка при получении изображения: %s", id)
+
 		if strings.Contains(err.Error(), "не найден") {
 			c.JSON(http.StatusNotFound, errResp{
 				Error:   "Изображение не найдено",

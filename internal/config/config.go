@@ -10,5 +10,4 @@ type Config struct {
 	MetadataPath  string `mapstructure:"METADATA_PATH"`
 	ThumbnailSize int    `mapstructure:"THUMBNAIL_SIZE"`
 	ResizeWidth   int    `mapstructure:"RESIZE_WIDTH"`
-	WatermarkText string `mapstructure:"WATERMARK_TEXT"`
 }

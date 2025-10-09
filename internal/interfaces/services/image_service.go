@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"mime/multipart"
-
 )
 
 //go:generate go run github.com/vektra/mockery/v2@v2.53.2 --name=ImageService --output=../../../mocks --filename=mock_image_service.go --with-expecter

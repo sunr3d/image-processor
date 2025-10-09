@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	RWTimeout   = 15 * time.Second
-	IdleTimeout = 60 * time.Second
+	RWTimeout       = 15 * time.Second
+	IdleTimeout     = 60 * time.Second
 	ShutdownTimeout = 30 * time.Second
 )
 

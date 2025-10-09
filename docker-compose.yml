@@ -30,14 +30,23 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: ["kafka-topics", "--bootstrap-server", "kafka:29092", "--create", "--topic", "image-processing", "--partitions", "1", "--replication-factor", "1", "--if-not-exists"]
+    
   app:
     build:
       context: .
       dockerfile: Dockerfile.app
     container_name: image-processor-app
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     environment:
       HTTP_PORT: "8080"
       LOG_LEVEL: "info"
@@ -48,8 +57,8 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./storage:/app/storage
-      - ./metadata:/app/metadata
+      - image-storage:/app/storage
+      - image-metadata:/app/metadata
 
   worker:
     build:
@@ -57,8 +66,8 @@ services:
       dockerfile: Dockerfile.worker
     container_name: image-processor-worker
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     environment:
       LOG_LEVEL: "info"
       KAFKA_BROKERS: "kafka:29092"
@@ -67,7 +76,10 @@ services:
       STORAGE_PATH: "/app/storage"
       THUMBNAIL_SIZE: 200
       RESIZE_WIDTH: 800
-      WATERMARK_TEXT: "© Sunr3d's Image Processor"
     volumes:
-      - ./storage:/app/storage
-      - ./metadata:/app/metadata
+      - image-storage:/app/storage
+      - image-metadata:/app/metadata
+
+volumes:
+  image-storage:
+  image-metadata:

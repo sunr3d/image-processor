@@ -26,10 +26,10 @@ func (h *Handler) RegisterHandlers() *ginext.Engine {
 	router.DELETE("/image/:id", h.deleteImage)
 
 	// Web-UI
-	router.Static("/web", "./web")
+	/* router.Static("/web", "./web")
 	router.GET("/", func(c *ginext.Context) {
 		c.File("./web/index.html")
-	})
+	}) */
 
 	return router
 }

@@ -49,6 +49,10 @@ func (s *subscriber) Subscribe(ctx context.Context, handler func(ctx context.Con
 			zlog.Logger.Info().Msg("Получен сигнал завершения контекста, остановка подписки на Kafka")
 			return nil
 		case msg := <-msgChan:
+			if len(msg.Value) == 0 {
+				continue
+			}
+
 			var task models.ProcessingTask
 			if err := json.Unmarshal(msg.Value, &task); err != nil {
 				zlog.Logger.Error().Err(err).Msgf("Ошибка при разборе задачи обработки изображения из Kafka: %s", msg.Value)

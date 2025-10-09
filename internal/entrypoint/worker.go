@@ -9,7 +9,6 @@ import (
 	"github.com/sunr3d/image-processor/internal/infra/storage/filestorage"
 	"github.com/sunr3d/image-processor/internal/services/processor"
 	"github.com/sunr3d/image-processor/internal/services/worker"
-	"github.com/wb-go/wbf/zlog"
 )
 
 func RunWorker(ctx context.Context, cfg *config.Config) error {
@@ -22,11 +21,9 @@ func RunWorker(ctx context.Context, cfg *config.Config) error {
 	defer subscriber.Close()
 
 	// Сервисный слой
-	proc := processor.New(cfg.ThumbnailSize, cfg.ResizeWidth, cfg.WatermarkText)
+	proc := processor.New(cfg.ThumbnailSize, cfg.ResizeWidth)
 
 	workerSvc := worker.New(proc, imgStor, metaStor, subscriber)
-
-	zlog.Logger.Info().Msg("Worker запущен и ожидает задачи из Kafka")
 
 	return workerSvc.Start(ctx)
 }

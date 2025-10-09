@@ -14,16 +14,15 @@ import (
 )
 
 func TestImageProcessor_New(t *testing.T) {
-	processor := New(200, 800, "Test Watermark")
+	processor := New(200, 800)
 
 	assert.Equal(t, 200, processor.thumbnailSize)
 	assert.Equal(t, 800, processor.resizeWidth)
-	assert.Equal(t, "Test Watermark", processor.watermarkText)
 }
 
 // Process tests.
 func TestImageProcessor_Process_OK(t *testing.T) {
-	processor := New(200, 800, "Test Watermark")
+	processor := New(200, 800)
 	testImagePath := createTestImage(t)
 	defer os.Remove(testImagePath)
 
@@ -37,7 +36,7 @@ func TestImageProcessor_Process_OK(t *testing.T) {
 }
 
 func TestImageProcessor_Process_FileNotFound(t *testing.T) {
-	processor := New(200, 800, "Test Watermark")
+	processor := New(200, 800)
 	nonExistentPath := "/path/to/non/existent/image.jpg"
 
 	result, err := processor.Process(nonExistentPath)
@@ -48,7 +47,7 @@ func TestImageProcessor_Process_FileNotFound(t *testing.T) {
 }
 
 func TestImageProcessor_Process_InvalidFile(t *testing.T) {
-	processor := New(200, 800, "Test Watermark")
+	processor := New(200, 800)
 
 	tempFile := filepath.Join(t.TempDir(), "invalid.jpg")
 	err := os.WriteFile(tempFile, []byte("not an image"), 0644)
@@ -74,7 +73,7 @@ func TestImageProcessor_encodeToJPEG(t *testing.T) {
 }
 
 func TestImageProcessor_addWatermark(t *testing.T) {
-	processor := New(200, 800, "Test Watermark")
+	processor := New(200, 800)
 	img := createSimpleImage(100, 100)
 
 	watermarked := processor.addWatermark(img)

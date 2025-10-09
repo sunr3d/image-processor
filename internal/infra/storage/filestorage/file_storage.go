@@ -33,7 +33,7 @@ func (fs *fileStorage) SaveOriginal(ctx context.Context, id string, file multipa
 		return "", fmt.Errorf("os.MkdirAll: %w", err)
 	}
 
-	path := filepath.Join(dir, filename)
+	path := filepath.Join(dir, "original.jpg")
 	dst, err := os.Create(path)
 	if err != nil {
 		return "", fmt.Errorf("os.Create: %w", err)
@@ -74,7 +74,7 @@ func (fs *fileStorage) GetPath(id, imageType string) (string, error) {
 
 	switch imageType {
 	case "original":
-		path = filepath.Join(fs.basePath, "original", id)
+		path = filepath.Join(fs.basePath, "original", id, "original.jpg")
 	case "resized", "thumbnail", "watermarked":
 		filename := fmt.Sprintf("%s.jpg", imageType)
 		path = filepath.Join(fs.basePath, "processed", id, filename)

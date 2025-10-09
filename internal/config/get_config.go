@@ -15,7 +15,7 @@ func GetConfig(path string) (*Config, error) {
 
 	cfg.SetDefault("HTTP_PORT", "8080")
 	cfg.SetDefault("LOG_LEVEL", "info")
-	cfg.SetDefault("KAFKA_BROKERS", "localhost:9092")
+	cfg.SetDefault("KAFKA_BROKERS", "kafka:29092")
 	cfg.SetDefault("KAFKA_TOPIC", "image-processing")
 	cfg.SetDefault("KAFKA_GROUP", "image-processor-group")
 	cfg.SetDefault("STORAGE_PATH", "./storage")

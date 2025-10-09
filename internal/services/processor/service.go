@@ -19,15 +19,13 @@ var _ services.ImageProcessor = (*imageProcessor)(nil)
 type imageProcessor struct {
 	thumbnailSize int
 	resizeWidth   int
-	watermarkText string
 }
 
 // New - конструктор для ImageProcessor
-func New(thumbSize, resizeW int, watermark string) *imageProcessor {
+func New(thumbSize, resizeW int) *imageProcessor {
 	return &imageProcessor{
 		thumbnailSize: thumbSize,
 		resizeWidth:   resizeW,
-		watermarkText: watermark,
 	}
 }
 

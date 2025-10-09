@@ -30,6 +30,6 @@ func RunApp(ctx context.Context, cfg *config.Config) error {
 
 	// Сервер
 	srv := server.New(":"+cfg.HTTPPort, engine)
-	
+
 	return srv.Run(ctx)
 }
