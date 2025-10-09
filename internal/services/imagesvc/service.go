@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"mime/multipart"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -72,13 +73,22 @@ func (is *imageService) UploadImage(ctx context.Context, file multipart.File, fi
 
 // GetImage - получает путь к изображению по его ID и типу.
 func (is *imageService) GetImage(ctx context.Context, id, imageType string) (string, error) {
-	if _, err := is.metaStorage.Get(ctx, id); err != nil {
+	meta, err := is.metaStorage.Get(ctx, id)
+	if err != nil {
 		return "", fmt.Errorf("metaStorage.Get: %w", err)
+	}
+
+	if imageType != "original" && meta.Status != models.StatusCompleted {
+		return "", fmt.Errorf("изображение еще не обработано, статус: %s", meta.Status)
 	}
 
 	path, err := is.imgStorage.GetPath(id, imageType)
 	if err != nil {
 		return "", fmt.Errorf("imgStorage.GetPath: %w", err)
+	}
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return "", fmt.Errorf("изображение не найдено: %s", path)
 	}
 
 	return path, nil
@@ -90,15 +100,16 @@ func (is *imageService) DeleteImage(ctx context.Context, id string) error {
 		return fmt.Errorf("metaStorage.Get: %w", err)
 	}
 
-	if err := is.imgStorage.DeleteImage(ctx, id); err != nil {
-		return fmt.Errorf("imgStorage.DeleteImage: %w", err)
-	}
-
 	if err := is.metaStorage.Delete(ctx, id); err != nil {
 		return fmt.Errorf("metaStorage.Delete: %w", err)
 	}
 
-	zlog.Logger.Info().Msgf("Изображение %s успешно удалено", id)
+	if err := is.imgStorage.DeleteImage(ctx, id); err != nil {
+		zlog.Logger.Warn().Err(err).Msgf("Ошибка удаления файлов для: %s", id)
+		return nil
+	}
+
+	zlog.Logger.Info().Msgf("Изображение %s и его метаданные успешно удалены", id)
 
 	return nil
 }
