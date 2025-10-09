@@ -8,11 +8,12 @@ import (
 	httphandlers "github.com/sunr3d/image-processor/internal/handlers"
 	"github.com/sunr3d/image-processor/internal/infra/broker/kafka"
 	"github.com/sunr3d/image-processor/internal/infra/storage/filestorage"
+	"github.com/sunr3d/image-processor/internal/server"
 	"github.com/sunr3d/image-processor/internal/services/imagesvc"
 )
 
 func RunApp(ctx context.Context, cfg *config.Config) error {
-	// Инфраслой
+	// Инфраслой (Infrastructure layer)
 	imageStor := filestorage.NewFileStorage(cfg.StoragePath)
 	metadataStor := filestorage.NewMetadataStorage(cfg.MetadataPath)
 
@@ -20,13 +21,15 @@ func RunApp(ctx context.Context, cfg *config.Config) error {
 	publisher := kafka.NewPublisher(kafkaBrokers, cfg.KafkaTopic)
 	defer publisher.Close()
 
-	// Сервисный слой
+	// Сервисный слой (Application / Use Cases layer)
 	imageSvc := imagesvc.New(imageStor, metadataStor, publisher)
 
-	// REST API (HTTP) + Middleware
+	// Слой представления (Presentation layer)
 	h := httphandlers.New(imageSvc)
 	engine := h.RegisterHandlers()
 
-	// Server
-	return engine.Run(":" + cfg.HTTPPort)
+	// Сервер
+	srv := server.New(":"+cfg.HTTPPort, engine)
+	
+	return srv.Run(ctx)
 }
