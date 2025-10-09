@@ -4,7 +4,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod tidy && go mod verify
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o image-processor ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o image-processor ./cmd/app/main.go
 
 FROM alpine:3.21
 
