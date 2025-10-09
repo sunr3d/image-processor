@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Processor</title>
+</head>
+<body>
+    <h1>Image Processor</h1>
+    
+    <!-- Форма загрузки -->
+    <div id="upload-section">
+        <h2>Загрузить изображение</h2>
+        <form id="upload-form">
+            <input type="file" id="image-input" accept="image/*" required>
+            <button type="submit">Загрузить</button>
+        </form>
+    </div>
+    
+    <!-- Форма поиска по ID -->
+    <div id="search-section">
+        <h2>Найти изображение по ID</h2>
+        <form id="search-form">
+            <input type="text" id="search-input" placeholder="Введите ID изображения" required>
+            <button type="submit">Найти</button>
+        </form>
+    </div>
+    
+    <!-- Результаты -->
+    <div id="results-section" style="display: none;">
+        <h2>Результаты обработки</h2>
+        <div id="image-id-display"></div>
+        <div id="status"></div>
+        <div id="images"></div>
+        <button id="delete-btn" style="display: none;">Удалить изображение</button>
+        <button id="back-btn">Назад</button>
+    </div>
+    
+    <script src="/web/app.js"></script>
+</body>
+</html>

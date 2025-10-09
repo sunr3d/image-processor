@@ -118,3 +118,39 @@ func (h *Handler) deleteImage(c *ginext.Context) {
 		Message: "Изображение успешно удалено",
 	})
 }
+
+func (h *Handler) getStatus(c *ginext.Context) {
+	id := c.Param("id")
+
+	meta, err := h.svc.GetImgMeta(c.Request.Context(), id)
+	if err != nil {
+		if strings.Contains(err.Error(), "не найден") {
+			c.JSON(http.StatusNotFound, errResp{
+				Error:   "Изображение не найдено",
+				Code:    http.StatusNotFound,
+				Details: err.Error(),
+			})
+			return
+		} else if strings.Contains(err.Error(), "еще не обработано") {
+			c.JSON(http.StatusNotFound, errResp{
+				Error:   "Изображение еще не обработано",
+				Code:    http.StatusNotFound,
+				Details: err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, errResp{
+			Error:   "Ошибка при получении метаданных изображения",
+			Code:    http.StatusInternalServerError,
+			Details: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, statusResp{
+		ID:      meta.ID,
+		Status:  string(meta.Status),
+		Message: meta.ErrorMessage,
+	})
+}

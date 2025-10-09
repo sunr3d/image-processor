@@ -17,6 +17,3 @@ test:
 
 fmt:
 	go fmt ./...
-
-build:
-	go build -o image-processor cmd/main.go

@@ -11,7 +11,9 @@ FROM alpine:3.21
 WORKDIR /app
 RUN adduser -D -g '' appuser
 COPY --from=builder /app/image-processor .
-RUN chown appuser:appuser /app
+COPY --from=builder /app/web ./web
+RUN mkdir -p /app/storage /app/metadata
+RUN chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8080

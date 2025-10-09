@@ -24,12 +24,13 @@ func (h *Handler) RegisterHandlers() *ginext.Engine {
 	router.POST("/upload", h.uploadImage)
 	router.GET("/image/:id", h.getImage)
 	router.DELETE("/image/:id", h.deleteImage)
+	router.GET("/status/:id", h.getStatus)
 
 	// Web-UI
-	/* router.Static("/web", "./web")
+	router.Static("/web", "./web")
 	router.GET("/", func(c *ginext.Context) {
 		c.File("./web/index.html")
-	}) */
+	})
 
 	return router
 }

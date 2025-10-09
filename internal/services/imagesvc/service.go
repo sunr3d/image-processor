@@ -113,3 +113,12 @@ func (is *imageService) DeleteImage(ctx context.Context, id string) error {
 
 	return nil
 }
+
+func (is *imageService) GetImgMeta(ctx context.Context, id string) (*models.ImageMetadata, error) {
+	meta, err := is.metaStorage.Get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("metaStorage.Get: %w", err)
+	}
+
+	return meta, nil
+}
